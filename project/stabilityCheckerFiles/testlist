@@ -1,0 +1,7 @@
+1.txt - S1 unassigned and finds P0 acceptable, L1 prefers P0 to P1. Should fail "unassigned student with full teacher who prefers this project"
+2.txt - S1 assigned and prefers P0 to P1, L1 prefers P0 to P1. Should fail "Assigned student with full teacher who prefers this project"
+3.txt - S1 unassigned, L1 undersubscribed. S1 has P0 in preferenceList which is offered by L1. Should fail "unassigned student with under capacity teacher"
+4.txt - S1 assigned, prefers P0 to P1, L1 undersubscribed. Should fail "Assigned student with under capacity teacher"
+Scenario five - S1 unassigned, L1 full and prefers p0 to their worst non empty project. Should fail "unassigned student with full teacher who prefers this project" (cant think of good test file for this)
+Scenario six - S1 assigned, L1 full and prefers p0 to their worst non empty project. Should fail "Assigned student with full teacher who prefers this project" (cant think of good test file for this)
+should test for blocking coaltions

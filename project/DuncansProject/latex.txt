@@ -1,0 +1,195 @@
+\pdfoutput=1
+
+\documentclass{l4proj}
+
+%
+% put any packages here
+%
+\usepackage[toc,page]{appendix}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\begin{document}
+\title{Algorithms for Student-Project Allocation With Lecturer Preferences Over Projects}
+\author{Duncan A. Milne and David F. Manlove}
+\date{School of Computing Science 
+Sir Alwyn Williams Building 
+University of Glasgow 
+G12 8QQ}
+\maketitle
+
+\begin{abstract}
+We attempts to implement two algorithms. The first algorithm was proposed in a paper by David F. Manlove and Gregg O’Malley, the second algorithm is a follow up of the first, by Mitsunori Ogihara and Jun Tarui. The proposed algorithms attempt to tackle the problem of producing a stable matching when allocating students to projects, where both students and lecturers have preferences over projects and both projects and lecturers have capacities. 
+\end{abstract}
+
+\educationalconsent
+%
+%NOTE: if you include the educationalconsent (above) and your project is graded an A then
+%      it may be entered in the CS Hall of Fame
+%
+\tableofcontents
+%==============================================================================
+
+\chapter{Introduction}
+\pagenumbering{arabic}
+
+\section{Overview}
+Final year students must complete an individual project, these assignments may be proposed by lecturers or by a student themself. For the projects proposed by lecturers, students must choose preferences from the given projects. An algorithm is then used to allocate students projects. In previous years this has been done based solely on student preferences however the aim of this project is to implement an algorithm that will produce a stable matching which takes into account both student and lecturer preferences over projects. 
+
+A stable matching requires there to be no chance of improvement being made upon the matching by a group of students permuting their projects. Stable matchings also require that no student and lecturer could improve the matching by forming a private arrangement involving some project. Other variables may include upper bounds on either the number of students a lecturer is willing to supervise or the capacity of the project itself. 
+
+Due to the NP-hard nature of this problem, the possibility of approximation algorithms is naturally relevant. Two approximation algorithms for this problem have been formulated: SPA-P-APPROX\cite{spapapprox} with a performance guarantee of 2 and SPA-P-APPROX-PROMOTION with a performance guarantee of 3/2\cite{promotion}. The aim of this project is to implement these approximation algorithms and carry out an experimental comparison of them based on randomly generated instances of the problem. The randomly generated instances should prove useful as the algorithms can be run numerous times, giving us the ability to easily compare the cardinality of the solutions found by the two algorithms. When using the algorithms with a real input set, the algorithms can be run numerous times, each time returning a different matching. A different matching is found by random selection of students from the data structure, when choosing one to assign a project, thus randomising the order on which they are chosen to be assigned to projects. The matching with the best cardinality can then be chosen. The best possible matching can also be found on small data sets with a brute force algorithm. The results from the brute force algorithm can be used to measure the success of the approximation algorithm. 
+
+\section{Outline}
+This dissertation will go over the work already done in relation to the stable matching problem, as well as the requirements for the project and the design of the implementation of the chosen algorithms. Any issues encountered will also  be discussed at length. Following this will be a final evaluation results accompanied by a conclusion of the paper.
+
+\chapter{Background}
+\section{Glossary}
+\textbf{Blocking Coalition:} A blocking coalition occurs when a group of students may permute their projects resulting and all receive a preferable project afterwards.
+
+\noindent\textbf{Blocking Pair:} A blocking pair occurs when A (student,project) pair (si , pj) ∈ (S × P) blocks a matching M, or is a blocking pair of M, if the following conditions are satisfied relative to M: 1. pj ∈ Ai (i.e. si finds pj acceptable); 2. either si is unassigned or si prefers pj to M(si); 3. pj is under-subscribed and either (a) si ∈ M(lk) and lk prefers pj to M(si), or (b) si ∈/ M(lk) and lk is under-subscribed, or (c) si ∈/ M(lk) and lk is full and lk prefers pj to his worst non-empty project, where lk is the lecturer who offers pj.
+
+\noindent\textbf{Performance Guarantee:} A performance guarantee of size 3/2 means that the algorithm is sure to return a matching with a size of at least 2/3 of the maximum cardinality
+
+\noindent\textbf{Stable Matching:} A stable matching occurs when there are no blocking coalitions, blocking pairs and capacity constraints are maintained.
+
+\noindent\textbf{Constraint/Integer Programming:} A programming paradigm wherein relations between variables are stated in the form of constraints.
+
+\section{Literature Survey}
+SPA-P-APPROX was formulated in a paper by David F. Manlove and Gregg O’Malley, the second algorithm is a follow up of the first, by Mitsunori Ogihara and Jun Tarui.
+
+SPA-P-APPROX, proposed by O’Malley and Manlove is predicted to have a performance guarantee of 2[1]. This means that the matching found is sure to have a cardinality of at least 50\% the size of the maximum matching. The SPA-P-APPROX-PROMOTION proposed by Mitsunori Ogihara and Jun Tarui is expected to have a 3/2 performance guarantee. This means matchings found will be of at least 75\% the size of the maximum possible matching. 
+
+\chapter{Requirements Gathering}
+The MOSCOW model was chosen for requirements gathering, this was due to the simplicity of the model. Functional requirements were also found.
+
+\begin{itemize}
+   \item \textbf{Must have }
+   \begin{enumerate}  
+     \item It is pertinent to the project to complete the approximation algorithms, without the implementation of these algorithms it will not be possible to compare results and evaluate the two.
+   \end{enumerate}
+   \item \textbf{Should have}
+   \begin{enumerate}
+     \item An implementation of brute force matching algorithm, this can be used to find the optimal matching on small data sets. The optimal matching can then be compared to the matchings found by the approximation algorithms, this will allow us to rigorously test the performance of the approximation algorithms.
+     \item A user interface allowing the program to be a lot more user friendly.
+     \item The two approximation algorithms should have the ability to find stable matchings with input size of one hundred for students, projects and lecturers with a good runtime.
+     \item The user should have the ability to run the algorithms on the same data set, with the ability to output the instance, matching and cardinality of matching.
+   \end{enumerate}
+   \item \textbf{Could have}
+   \begin{enumerate}
+     \item Ability to run the algorithms X times on the same input set, where X is an arbitrary integer chosen by the user. This would return the maximum cardinality stable matching found.
+     \item Integer programming model
+     \item The two approximation algorithms should have the ability to find stable matchings with input size of one thousand for students, projects and lecturers with a good execution time.
+   \end{enumerate}
+   \item \textbf{Functional Requirements}
+   \begin{enumerate}
+       \item Algorithms must respect time complexity
+   \end{enumerate}
+\end{itemize}
+
+These requirements were elicited before the implementation of the project had begun. It was originally envisaged that we would develop a simple brute-force algorithm for finding a maximum size stable matching, but when it became clear that more time was available for solving the problem optimally, an integer programming formulation was implemented instead.
+
+\chapter{Design}
+The two algorithms SPA-P-APPROX\cite{spapapprox} and SPA-P-APPROX-PROMOTION\cite{promotion} already had formulated pseudo code, they are shown in respective order below:
+
+\begin{algorithm}
+   \caption{Approximation algorithm spa-p-approx for max-spa-p.}
+    \begin{algorithmic}[1]
+        \State M = $\oldemptyset$
+        \While{(some student s\textsubscript{i} is unassigned and s\textsubscript{i} has a non-empty list)}
+        \State p\textsubscript{j} = first project on s\textsubscript{i}’s list
+        \State l\textsubscript{k} = lecturer who offers p\textsubscript{j}
+        \State p\textsubscript{z} = l\textsubscript{k}’s worst project
+        \If{l\textsubscript{k} is non-empty}
+            \State p\textsubscript{z} = l\textsubscript{k}’s worst non-empty project
+        \EndIf
+        \If{p\textsubscript{j} is full or (l\textsubscript{k} is full and p\textsubscript{j} = p\textsubscript{z})}
+            \State delete p\textsubscript{j} from s\textsubscript{i}’s list
+        \Else 
+            \Comment{s\textsubscript{i} applies to p\textsubscript{j}}
+            \State M = M $\cup$ {(s\textsubscript{i}, p\textsubscript{j} )}
+            \Comment{s\textsubscript{i} is provisionally assigned to p\textsubscript{j} and to l\textsubscript{k}}
+            \If{l\textsubscript{k} is over-subscribed}
+                \State s\textsubscript{r} = some student in M(p\textsubscript{z})
+                \State M = M/{(s\textsubscript{r}, p\textsubscript{z})}
+                \State delete p\textsubscript{z} from s\textsubscript{r}’s list
+            \EndIf
+            \If{l\textsubscript{k} is full}
+                \State p\textsubscript{z} = l\textsubscript{k}’s worst non-empty project
+                \For{each successor p\textsubscript{t} of p\textsubscript{z} on l\textsubscript{k}’s list}
+                    \For{each student s\textsubscript{r} who finds p\textsubscript{t} acceptable}
+                        \State delete p\textsubscript{t} from s\textsubscript{r}’s list
+                    \EndFor
+                \EndFor
+            \EndIf
+        \EndIf
+        \EndWhile
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+   \caption{Improved approximation bounds for max-spa-p.}
+    \begin{algorithmic}[1]
+        \State M = $\oldemptyset$
+        \State Let all students be unassigned
+        \While{(there exists an unassigned student s\textsubscript{i} such that s\textsubscript{i}'s list is non-empty or s\textsubscript{i} is unpromoted)}
+            \If{(s\textsubscript{i}'s list is empty and s\textsubscript{i} is unpromoted)}
+                \State Promote s\textsubscript{i}.
+            \EndIf
+            \State P\textsubscript{j} = first project on s\textsubscript{i}'s list.
+            \State L\textsubscript{k} = lecturer who offers p\textsubscript{j}
+            \Comment{s\textsubscript{i} applies to p\textsubscript{j}}
+            \If{(p\textsubscript{j} is full) or (l\textsubscript{k} is full and p\textsubscript{j} is l\textsubscript{k}'s worst non-empty project)} 
+                \If{(s\textsubscript{i} is unpromoted) or (There is no unpromoted student in M(p\textsubscript{j})}
+                    \State Reject s\textsubscript{i}
+                \Else
+                    \State {Reject an arbitrary unpromoted student in M(p\textsubscript{j}) and add (s\textsubscript{i}, p\textsubscript{j}) to M}
+                \EndIf
+            \ElsIf{l\textsubscript{k} is full and prefers s\textsubscript{i}'s worst non-empty project to p\textsubscript{j}}
+                \State reject s\textsubscript{i}
+            \ElsIf{Otherwise}
+                \State Add (s\textsubscript{i}, p\textsubscript{j}) to M
+                \If{l\textsubscript{k} is over-subscribed}
+                    \State p\textsubscript{z} = l\textsubscript{k}'s worst non-empty project 
+                    \Comment{(Note that p\textsubscript{z}!=p\textsubscript{j}}
+                    \If{M(p\textsubscript{z}) contains an unpromoted student}
+                        \State Reject an arbitrary unpromoted student in M(p\textsubscript{z})
+                    \Else
+                        \State Reject an arbitrary student in M(p\textsubscript{z})
+                    \EndIf
+                \EndIf
+            \EndIf
+        \EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+With the algorithms already implemented, the task of planning out a structure for the program simply consisted of mapping out a class diagram as shown in appendix \ref{classdiagram}. The intuitive path of using a Student, Lecturer and Project class was chosen.
+
+
+Every time a hardcoded instance is inputted into the algorithm, a level of randomisation is added due to the random choice of unassigned students when choosing one to assign a project to. This is done 
+
+%%%%%%%%%%%%%%%%
+%              %
+%  APPENDICES  %
+%              %
+%%%%%%%%%%%%%%%%
+\begin{appendices}
+
+\chapter{Project Log}
+
+\chapter{Class Diagram}
+\label{classdiagram}
+\chapter{User Manual}
+
+\end{appendices}
+%%%%%%%%%%%%%%%%%%%%
+%   BIBLIOGRAPHY   %
+%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{plain}
+\bibliography{bib}
+
+\end{document}

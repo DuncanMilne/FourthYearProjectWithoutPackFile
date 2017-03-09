@@ -1,0 +1,338 @@
+
+
+
+
+things to do next time - work on ip programming as blocking coalition is clearly not working, running ipfails.txt shows this.
+
+// is the stab checker working or using pref lists with empty projects?@!?!@?!@?!@!?@!?@!?@!? #NOTE #TODO
+if all this cloning nonsense fails, output algorithm instance to file then read it in for all that want to be run
+
+4 6 2 0 0 fails IP programming
+
+
+
+
+IP model notes
+Frances' model is equivalent to my algorithm.
+
+
+
+
+
+
+prints out all grb vars
+
+for (Student s:a.untouchedStudents){
+	for (GRBVar v:s.grbvars){
+		System.out.println(v.get(GRB.DoubleAttr.X));
+	}
+}
+
+
+
+
+
+
+
+DONT NEED
+
+    /**
+    * <p>Optimises on the minimum student cost and adds relevant constraint.</p>
+    
+    public void minSumStudentRanks(Algorithm a) throws GRBException {
+    	GRBLinExpr sumAllRanks = new GRBLinExpr();
+        for (Student s:a.untouchedStudents) {
+        	for (Project p: s.preferenceList)
+        		sumAllRanks.addTerm(s.preferenceList.indexOf(p)+1, grbmodel.addVar(0.0, 1.0, 0.0, GRB.BINARY, "pref" + s.name)); //the one should be replaced by the students rank of this project
+        }
+
+        grbmodel.setObjective(sumAllRanks, GRB.MINIMIZE);
+        grbmodel.optimize();
+        int status = grbmodel.get(GRB.IntAttr.Status); 
+
+        // if there is a feasible solution
+        if (status == GRB.Status.OPTIMAL) {
+            double minSumRank = grbmodel.get(GRB.DoubleAttr.ObjVal);
+
+            grbmodel.addConstr(sumAllRanks, GRB.LESS_EQUAL, (double) minSumRank, "ConstraintSumRanks");
+        }
+    }
+    */
+
+
+
+
+
+
+
+
+
+
+
+
+
+Done in cheesy way
+shuffle list of unassigned students before the while loop (randomises prog)
+when adding students to a list add them in random pos
+
+
+
+
+13/11/2016
+now test all scenarios for blocking pair
+
+first scenario - S1 unassigned and finds P0 acceptable, L1 prefers P0 to P1
+
+S1: 0,1,2
+S2: 1,2,0
+//S3: 2,0,1
+
+L1: 0, 1
+
+{(S2, P1), /*(S3, P2)*/}
+
+16/11/2016
+
+create projects. create array to store lecturers for each project. ie project 1,2,3 assigned
+lecturers 3,2,1 could have array [3, 2, 1].
+iterate over all projects after creating the lecturers and assigned the project their lecturer
+
+
+
+case 2:
+  /* first scenario - S1 unassigned and finds P0 acceptable, L1 prefers P0 to P1
+
+  S1: 0
+  S2: 1
+
+  L1: 0, 1
+
+  {(S2, P1)} */
+
+  algorithm = new Algorithm();
+  for (i = 0; i < 2; i++){
+    algorithm.unassignedStudents.add(new Student(Integer.toString(i)));
+  }
+  populateProjects(2);
+  populateLecturers(1);
+
+  // give lecturer both projects
+  algorithm.assignedStudents.add(algorithm.unassignedStudents.get(1));
+  algorithm.unassignedStudents.remove(algorithm.assignedStudents.get(0));
+  // give student 1 project 1 and student 2 project 2
+  algorithm.unassignedStudents.get(0).preferenceList.add(algorithm.testProjects.get(0));
+  algorithm.assignedStudents.get(0).preferenceList.add(algorithm.testProjects.get(1));
+
+  // student 2 has project 1 assigned, lecturer prefers project 0 though.
+  algorithm.assignedStudents.get(0).currentlyAssignedProject = algorithm.testProjects.get(1);
+  algorithm.testProjects.get(1).currentlyAssignedStudents.add(algorithm.assignedStudents.get(0));
+
+  //give both projects same lecturer
+  algorithm.testProjects.get(0).lecturer = algorithm.testLecturers.get(0);
+  algorithm.testProjects.get(1).lecturer = algorithm.testLecturers.get(0);
+  algorithm.testLecturers.get(0).projectList.add(algorithm.testProjects.get(0));
+  algorithm.testLecturers.get(0).projectList.add(algorithm.testProjects.get(1));
+
+  algorithm.testLecturers.get(0).numberOfAssignees = 1;
+
+  algorithm.unassignedStudents.get(0).rankingList = new int[1];
+  algorithm.unassignedStudents.get(0).rankingList[0] = 0;
+
+  algorithm.assignedStudents.get(0).rankingList = new int[1];
+  algorithm.assignedStudents.get(0).rankingList[0] = 0;
+
+  algorithm.unassignedStudents.get(0).rankingListTracker = 0;
+  algorithm.assignedStudents.get(0).rankingListTracker = 0;
+
+  algorithm.s.checkUnassignedStudentsForBlockingPairs(algorithm.unassignedStudents);
+  break;
+case 3:
+
+  algorithm = new Algorithm();
+
+  /* second scenario - S1 assigned and prefers P0 to P1, L1 prefers P0 to P1
+
+  S1: 0, 1
+
+  L1: 0, 1
+
+  {(S1, P1)} */
+
+  student = new Student("Student 1");
+  project = new Project("Project 1");
+  project2 = new Project("Project 2");
+  lecturer = new Lecturer("Lecturer 1");
+
+  student.preferenceList.add(project);
+  student.preferenceList.add(project2);
+
+  // because he has been assigned project 0
+  student.rankingListTracker = 1;
+
+  algorithm.testLecturers.add(lecturer);
+  algorithm.assignedStudents.add(student);
+  algorithm.testProjects.add(project);
+
+  student.currentlyAssignedProject = project2;
+  project2.currentlyAssignedStudents.add(student);
+
+  project.lecturer = lecturer;
+  project2.lecturer = lecturer;
+  lecturer.projectList = new ArrayList<Project>();
+  lecturer.projectList.add(project);
+  lecturer.projectList.add(project2);
+
+  lecturer.numberOfAssignees = 1;
+  project2.currentlyAssignedStudents.add(student);
+
+  student.rankingList = new int[2];
+  student.rankingList[0] = 0;
+  student.rankingList[1] = 1;
+
+  algorithm.s.checkAssignedStudentsForBlockingPairs(algorithm.assignedStudents);
+  break;
+case 4:
+
+  algorithm = new Algorithm();
+
+  /* third scenario - S1 unassigned, L1 undersubscribed
+
+  S1: 0
+
+  L1: 0
+
+  {} */
+
+  student = new Student("Student 1");
+  project = new Project("Project");
+  lecturer = new Lecturer("Lecturer 1");
+
+  student.preferenceList.add(project);
+
+  algorithm.testLecturers.add(lecturer);
+  algorithm.unassignedStudents.add(student);
+  algorithm.testProjects.add(project);
+
+  project.lecturer = lecturer;
+  lecturer.projectList = new ArrayList<Project>();
+  lecturer.projectList.add(project);
+
+  student.rankingList = new int[2];
+  student.rankingList[0] = 0;
+
+  algorithm.s.checkUnassignedStudentsForBlockingPairs(algorithm.unassignedStudents);
+  break;
+case 5:
+  algorithm = new Algorithm();
+
+  /* fourth scenario - S1 assigned, prefers P0 to P1, L1 undersubscribed
+
+  S1: 0, 1
+
+  L1: 0
+  L2: 1
+
+  {(S1, P1)} */
+
+  student = new Student("Student 1");
+  project = new Project("Project");
+  lecturer = new Lecturer("Lecturer 1");
+  lecturer2 = new Lecturer("Lecturer 2");
+  project2 = new Project("Project 2");
+
+  student.currentlyAssignedProject = project2;
+  project2.currentlyAssignedStudents.add(student);
+
+  project.currentlyAssignedStudents = new ArrayList<Student>();
+
+  project.lecturer = lecturer;
+  project2.lecturer = lecturer2;
+
+  student.preferenceList.add(project);
+  student.preferenceList.add(project2);
+
+  student.rankingListTracker = 1;
+
+  student.rankingList = new int[2];
+  student.rankingList[0] = 0;
+  student.rankingList[1] = 1;
+
+  algorithm.testLecturers.add(lecturer);
+  algorithm.testLecturers.add(lecturer2);
+  algorithm.assignedStudents.add(student);
+  algorithm.testProjects.add(project);
+  algorithm.testProjects.add(project2);
+
+  student.currentlyAssignedProject = project;
+  project2.currentlyAssignedStudents.add(student);
+
+  lecturer.projectList = new ArrayList<Project>();
+  lecturer.projectList.add(project);
+  lecturer2.projectList = new ArrayList<Project>();
+  lecturer2.projectList.add(project2);
+  lecturer2.numberOfAssignees=1;
+
+  algorithm.s.checkAssignedStudentsForBlockingPairs(algorithm.assignedStudents);
+  break;
+case 6:
+  /* fifth scenario - S1 unassigned, L1 full and prefers p0 to their worst non empty project
+
+
+  {()} */
+  break;
+case 7:
+
+  /* sixth scenario - S1 assigned, L1 full and prefers p0 to their worst non empty project
+
+
+  {()} */
+  break;
+}
+
+STUPID WAYS TO PRINT
+
+/*
+System.out.print("Lecturer name is " + l.name + " Their projects are ");
+for (Project p: l.projectList) {
+  System.out.print(p.name + " ");
+}
+System.out.println();
+*/
+
+
+/*
+System.out.println();
+System.out.println("PRINTING UNASSIGNED STUDENTS");
+ArrayList<Student> toPrint = unassignedStudents;
+for (Student s: toPrint) {
+  System.out.print("Student name is " + s.name + " Projects names are ");
+  for (Project p: s.preferenceList) {
+    System.out.print(p.name + " ");
+  }
+  System.out.println();
+}
+System.out.println();
+System.out.println("PRINTING ASSIGNED STUDENTS");
+toPrint = assignedStudents;
+for (Student s: toPrint) {
+  System.out.print("Student name is " + s.name + " Projects names are ");
+  for (Project p: s.preferenceList) {
+    System.out.print(p.name + " ");
+  }
+  System.out.println();
+}
+System.out.println();
+*/
+
+/*
+for (Project p: toPrint) {
+  System.out.println("Project name is " + p.name);
+  System.out.println("Lecturer is " + p.lecturer.name);
+  if (p.currentlyAssignedStudents.size()!=0) { // Print out projects currentlyAssignedStudents
+    System.out.print("project's currentlyAssignedStudents names are ");
+    for (Student s:p.currentlyAssignedStudents) {
+      System.out.print(s.name + " ");
+    }
+  }
+}
+*/
